@@ -1,0 +1,501 @@
+8B? - 4B pointer to EOF - 4B filemagic MWLD - 4B pointer to STAO
+
+
+LDWM: always 96B long? 
+    4B filemagic LDWM - 12B padding? - 1B list separator - 2B amount of 6B items in this section
+
+STAO: 4B pointer to next section - the rest is just padding?
+
+model headers?
+4B filemagic SONA - 4B padding - 
+
+header DYNO: 20B long
+    4B DYNO filemagic - 4B pointer to VOX1 (current offset, click the goto in int32 instead of Uint32) 
+    4B Number of obm / LDHS sections - 4B Number of animations stored - 4B number of animations used ? (including duplicates)
+
+animation names are 32 bytes long and cut off if there are more than 32 letters
+"obm" names are 16 bytes, split into 2 byte sections
+
+obm header: 2BC Bytes long
+    2B 02 00 - 2B some sort of counter or offset? - 2B?? - 1B number of bones - 1B number of entries in the bit before the name section
+    1B number of parts of the name section with data in - 1B anim counter? - 16B padding - 2B vertex count -  2B face count
+    4B flags?? - 28B ??? lots of FFFF - 4B? - 402B???? 
+    Name section: 2B name letters - 22B ??? <-- repeats 8 times
+    - 48B padding
+
+obm info:
+    Face section: 20B stride; mesh info
+        6B Face normals - 2B padding - 6B triangle made of vertex indices - 4B texture to use - 2B padding?
+
+    Vertex section: CONTAINS VERTEX DATA! example stride below vvv (shorts are signed)
+                Verts on the edges of uv islands are written in the file multiple times,
+                due to them having multiple instances on the uv map. 
+        03 BE                 FF BA                 FF D7                 00 01      00 00 
+        2B short Z location - 2B short X location - 2B short Y location - 2B 00 01 - 2B short Z location
+        00 00                 00 00                 00 01 
+        2B short X location - 2B short Y location - 2B 00 01
+        86 86 86      B9 45 4F             00 00        04 18 F1 59    00                 FF                 
+        3B 86 86 86 - 3B vertex normals? - 2B padding - 4B UVs       - 1B Bone 1 index? - 1B Bone 2 index? FF if only one bone
+        FF                  00
+        1B Bone 1 weight? - 1B Bone 2 weight? 
+
+    each "counter" section is another part of the mesh and starts drawing centered at the origin
+
+    Skeleton: 8B stride; only joint locations
+        2B Z location relative to parent - 2B X location relative to parent -  2B Y location relative to parent - 2B padding
+
+    Bone heirarchy: 1B bone indices; 
+        its a list of bone parents; padding so section including skeleton
+        is to the nearest multiple of 8B
+
+ANIM:  stores anim data for each bone in order (probs)
+    has list of 2B items with length being the total animation count from the Obm headers - padded till the list is a multiple of 8B
+    1B ? - 1B Anount of bones in this anim - 2B ?? - 
+    4B length of animation data from end of header- 4B frames? - 32B name of animation 
+    ANIM data:
+        2B number of 12B frames - 2B number of 8B thingies (frames?)
+    frame:
+        8B is position?
+        >>I dont think its thnis... 4B frame number - 4B value - 4B slope
+        2B frame - 2B padding - 6B xyz rotation - 2B slope???
+
+        this is 96b (12B) frame data
+        and ???
+        wii_development_package/NintendoWare/Revolution/CommandLineTools/docs/g3dcvtr.pdf
+        wii_development_package/RVL_SDK/docs/en_US/Graphics_Programmer's_Guide/Advanced_GX.pdf
+
+
+LDYD: section always a mutiple of 16B, last data section marker is 94
+    4B LDYD magic - ????- 4B ends in FFFFFFFF if before a LDHS section
+    ;3B? mini-headers separating 8B lists of data (1B? - 1B? - 1B number of items before next mini-header)
+    ;after data - xB padding till next multiple of 16B - 4B pointer to 3x16B before end of next section? 
+    4B pointer? - 4B pointer? - 4B FFFFFFFF if before an LDHS section
+
+LDHS:  section always a mutiple of 16B, last data section marker is 96, array items 2B
+    12B padding with 0s? - 1B splitter ???? or like a marker? - 16B array items?
+    ;3B? mini-headers separating 2B lists of data (1B? - 1B? - 1B number of items before next mini-header)
+
+VOX1: 4B file magic - 4B pointer to end of section - then theres like nothing except one 00 00 00 04?
+
+LGHT: list? might always be the same?
+    4B file magic LGHT - 4B pointer to end of section  
+    8B padding - 4B number of list entries?
+
+
+
+Main Header
+"obm" headers
+Faces <-- face list? and uv map assignment?
+Verts <-- vertex list
+Skeleton 
+Bone heirarchy
+animation data
+LDYD  <-- even obm that don't have models have a LDYD+LDHS section in the file. made of vertex indices
+LDHS  <-- Same number of these as OBM sections, has at least one LDYD before it? made of vertex indices
+VOX1
+LGHT
+ENGD
+
+9e9e9e00 = end of file code
+
+VOX1 possibly where data ends?
+LDYD + LDHS may store model data... one of the extra LDYD sections possibly skeleton? LDYD seems more uniform than LDHS...
+
+game was made with "CodeWarrior"
+https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.699.1583&rep=rep1&type=pdf
+
+---odd has---
+    4 obms
+    54 anims
+        54 play_odd
+    5 LDYD sections
+    4 LDHS sections
+
+    play_odd has 1400 verts
+    yyhyhyhyh
+---ulrich has---
+    4 obms
+    52 anims
+
+    6 LDYD sections
+    4 LDHS sections
+    yyhyhyyhyh
+---aelita has---  
+    5 obms
+    58 anims
+        55 play_aelita
+        3 weapon_wings
+    47 bones on main arm
+    11 bones on wings arm
+    10 LDYD sections
+    5 LDHS sections
+    yyyhyyhyyyhyhyh
+---yumi has---
+    3 obms
+    74 anims
+        65 play_yumi
+        9  weapon_fan
+
+    4 LDYD sections
+    3 LDHS sections
+    yyhyhyh
+
+ulrich TTT section counts
+01  95
+02  44
+03  65
+04  25
+05  17
+06  30
+07  65
+08  25
+09  17
+0a  67
+0b  80
+0c  36
+0d  231
+0e  18
+0f  48
+10  56
+11  19
+12  2
+13  17
+14  14
+15  18
+16  9
+17  18
+18  13
+19  14
+1a  7
+1b  18
+1c  11
+1d  38
+1e  72
+1f  50
+20  2
+21  17
+22  2
+23  17
+24  2
+25  17
+26  2
+27  17
+28  2
+29  16 +-1
+
+1360 or 1361?
+body = 1396 verts
+head = 272 verts
+
+odd vertex groups
+00		        10 forearm 1		20 finger 2 2
+01 hips		    11 palm 1		    21 fingertip 2 2
+02 thigh 1	    12 finger 1 1		22 finger 2 3
+03 shin 1	    13 fingertip 1 1	23 fingertip 2 3
+04 heel 1       14 finger 1 2		24 finger 2 4
+05 toe 1	    15 fingertip 1 2	25 fingertip 2 4
+06 thigh 2	    16 finger 1 3		26 tail 1
+07 shin 2	    17 fingertip 1 3	27 tail 2
+08 heel 2	    18 finger 1 4		28 tail 3
+09 toe 2	    19 fingertip 1 4	29 tail 4
+0a waist	    1a shoulder 2
+0b chest	    1b arm 2
+0c neck		    1c forearm 2
+0d head		    1d palm 2
+0e shoulder 1	1e finger 2 1
+0f arm 1	    1f fingertip 2 1
+
+
+play_odd obm (ad
+weapon_shield_od
+play_odd_wirefra
+weapon_shield_od
+
+4
+----------------
+
+play_odd_boss ob
+weapon_shield_od
+weapon_shield_od
+play_odd_wirefra
+
+4
+----------------
+
+play_ulrich obm 
+weapon_sword_in 
+weapon_sword_out
+play_ulrich_wire
+
+4
+----------------
+
+play_aelita obm 
+weapon_energy ob
+weapon_shield_ae
+weapon_wings obm
+play_aelita_wire
+
+5
+----------------
+
+play_yumi obm (a
+weapon_fan obm (
+play_yumi_wirefr
+
+3
+
+----------------
+odd anims
+
+ODD_Wait_L.ANI
+ODD_Wait02_L.ANI
+ODD_Wait03_L.ANI
+ODD_Walk_L.ANI
+ODD_Run_L.ANI
+ODD_Run_E.ANI
+ODD_RunShort_E.ANI
+ODD_JumpUp.ANI
+ODD_JumpTop.ANI
+ODD_JumpDown_L.ANI
+ODD_JumpLand.ANI
+ODD_JumpHang.ANI
+ODD_ZapIn.ANI
+ODD_ZapOut.ANI
+ODD_Guard_B.ANI
+ODD_Guard_L.ANI
+ODD_Guard_E.ANI
+ODD_GuardHit.ANI
+ODD_GuardPerfect01.ANI
+ODD_GuardPerfect02.ANI
+ODD_HitRight.ANI
+ODD_HitLeft.ANI
+ODD_HitBack.ANI
+ODD_Death.ANI
+ODD_DodgeForward.ANI
+ODD_DodgeBackward.ANI
+ODD_DodgeRight.ANI
+ODD_DodgeLeft.ANI
+ODD_HitStrongFront.ANI
+ODD_HitStrongBack.ANI
+ODD_JumpHitStrongFront_B.ANI
+ODD_JumpHitStrongFront_L.ANI
+ODD_JumpHitStrongFront_E.ANI
+ODD_JumpHitStrongBack_B.ANI
+ODD_JumpHitStrongBack_L.ANI
+ODD_JumpHitStrongBack_E.ANI
+ODD_Shoot_MoveForward_L.ANI
+ODD_Shoot_MoveBackward_L.ANI
+ODD_Shoot_MoveRight_L.ANI
+ODD_Shoot_MoveLeft_L.ANI
+ODD_Shoot_Wait_L.ANI
+ODD_Shoot_JumpUp.ANI
+ODD_Shoot_JumpTop.ANI
+ODD_Shoot_JumpDown_L.ANI
+ODD_Shoot_JumpLand.ANI
+ODD_Wall_B.ANI
+ODD_WallHung.ANI
+ODD_WallJump.ANI
+ODD_ClimbHang.ANI
+ODD_ClimbWait_L.ANI
+ODD_ClimbUp.ANI
+ODD_ClimbDown.ANI
+ODD_ClimbRight.ANI
+ODD_ClimbLeft.ANI
+
+----------------
+
+ulrich anims
+
+ULRICH_Wait_L.ANI
+ULRICH_Wait02_L.ANI
+ULRICH_Wait03_L.ANI
+ULRICH_Walk_L.ANI
+ULRICH_Run_L.ANI
+ULRICH_Run_E.ANI
+ULRICH_RunShort_E.ANI
+ULRICH_JumpUp.ANI
+ULRICH_JumpTop.ANI
+ULRICH_JumpDown_L.ANI
+ULRICH_JumpLand.ANI
+ULRICH_JumpHang.ANI
+ULRICH_ZapIn.ANI
+ULRICH_ZapOut.ANI
+ULRICH_Guard_B.ANI
+ULRICH_Guard_L.ANI
+ULRICH_Guard_E.ANI
+ULRICH_GuardHit.ANI
+ULRICH_GuardPerfect01.ANI
+ULRICH_GuardPerfect02.ANI
+ULRICH_HitRight.ANI
+ULRICH_HitLeft.ANI
+ULRICH_HitBack.ANI
+ULRICH_Death.ANI
+ULRICH_DodgeForward.ANI
+ULRICH_DodgeBackward.ANI
+ULRICH_DodgeRight.ANI
+ULRICH_DodgeLeft.ANI
+ULRICH_HitStrongFront.ANI
+ULRICH_HitStrongBack.ANI
+ULRICH_JumpHitStrongFront_B.ANI
+ULRICH_JumpHitStrongFront_L.ANI
+ULRICH_JumpHitStrongFront_E.ANI
+ULRICH_JumpHitStrongBack_B.ANI
+ULRICH_JumpHitStrongBack_L.ANI
+ULRICH_JumpHitStrongBack_E.ANI
+ULRICH_Sword1_Up.ANI
+ULRICH_Sword1_Down.ANI
+ULRICH_Sword1_Right.ANI
+ULRICH_Sword1_Left.ANI
+ULRICH_Sword2_Up.ANI
+ULRICH_Sword2_Down.ANI
+ULRICH_Sword2_Right.ANI
+ULRICH_Sword2_Left.ANI
+ULRICH_Sword_Ultimate.ANI
+ULRICH_Sword1_JumpAttack.ANI
+ULRICH_Sword1_JumpAttack_Land.A
+ULRICH_Triplicata.ANI
+ULRICH_Countered01.ANI
+ULRICH_Countered02.ANI
+WEAPON_SWORD_IN_Wait_L.ANI
+WEAPON_SWORD_OUT_Wait_L.ANI
+
+----------------
+aelita anims
+
+AELITA_Wait_L.ANI
+AELITA_Wait02_L.ANI
+AELITA_Wait03_L.ANI
+AELITA_Walk_L.ANI
+AELITA_Run_L.ANI
+AELITA_Run_E.ANI
+AELITA_RunShort_E.ANI
+AELITA_JumpUp.ANI
+AELITA_JumpTop.ANI
+AELITA_JumpDown_L.ANI
+AELITA_JumpLand.ANI
+AELITA_JumpHang.ANI
+AELITA_ZapIn.ANI
+AELITA_ZapOut.ANI
+AELITA_Guard_B.ANI
+AELITA_Guard_L.ANI
+AELITA_Guard_E.ANI
+AELITA_GuardHit.ANI
+AELITA_GuardPerfect01.ANI
+AELITA_GuardPerfect02.ANI
+AELITA_HitRight.ANI
+AELITA_HitLeft.ANI
+AELITA_HitBack.ANI
+AELITA_Death.ANI
+AELITA_DodgeForward.ANI
+AELITA_DodgeBackward.ANI
+AELITA_DodgeRight_L.ANI
+AELITA_DodgeLeft_L.ANI
+AELITA_HitStrongFront.ANI
+AELITA_HitStrongBack.ANI
+AELITA_JumpHitStrongFront_B.ANI
+AELITA_JumpHitStrongFront_L.ANI
+AELITA_JumpHitStrongFront_E.ANI
+AELITA_JumpHitStrongBack_B.ANI
+AELITA_JumpHitStrongBack_L.ANI
+AELITA_JumpHitStrongBack_E.ANI
+AELITA_MoveForward_L.ANI
+AELITA_MoveBackward_L.ANI
+AELITA_MoveRight_L.ANI
+AELITA_MoveLeft_L.ANI
+AELITA_Energy1_Load_L.ANI
+AELITA_Energy2_Load_L.ANI
+AELITA_Energy1_Shoot.ANI
+AELITA_Energy2_Shoot.ANI
+AELITA_Freeze_B.ANI
+AELITA_Freeze_L.ANI
+AELITA_Freeze_E.ANI
+AELITA_Create_B.ANI
+AELITA_Create_L.ANI
+AELITA_Create_E.ANI
+AELITA_Flight_Begin.ANI
+AELITA_Flight_Forward.ANI
+AELITA_Flight_Stop_B.ANI
+AELITA_Flight_Stop_L.ANI
+AELITA_Flight_Stop_E.ANI
+WEAPON_WINGS_Flight_Begin.ANI
+WEAPON_WINGS_Flight_Loop.ANI
+
+----------------
+
+yumi anims
+
+00  YUMI_Wait_L.ANI
+01  YUMI_Wait02_L.ANI
+02  YUMI_Wait03_L.ANI
+03  YUMI_Walk_L.ANI
+04  YUMI_Run_L.ANI
+05  YUMI_Run_E.ANI
+06  YUMI_RunShort_E.ANI
+07  YUMI_JumpUp.ANI
+08  YUMI_JumpTop.ANI
+09  YUMI_JumpDown_L.ANI
+0a  YUMI_JumpLand.ANI
+0b  YUMI_JumpHang.ANI
+0c  YUMI_ZapIn.ANI
+0d  YUMI_ZapOut.ANI
+0f  YUMI_Gard_B.ANI
+10  YUMI_Gard_L.ANI
+11  YUMI_Gard_E.ANI
+12  YUMI_GardHit.ANI
+13  YUMI_GuardPerfect01.ANI
+14  YUMI_GuardPerfect02.ANI
+15  YUMI_HitRight.ANI
+16  YUMI_HitLeft.ANI
+17  YUMI_HitBack.ANI
+18  YUMI_Death.ANI
+19  YUMI_DodgeForward.ANI
+1a  YUMI_DodgeBackward.ANI
+1b  YUMI_DodgeRight.ANI
+1c  YUMI_DodgeLeft.ANI
+1d  YUMI_HitStrongFront.ANI
+1e  YUMI_HitStrongBack.ANI
+1f  YUMI_JumpHitStrongFront_B.ANI
+20  YUMI_JumpHitStrongFront_L.ANI
+21  YUMI_JumpHitStrongFront_E.ANI
+22  YUMI_JumpHitStrongBack_B.ANI
+23  YUMI_JumpHitStrongBack_L.ANI
+24  YUMI_JumpHitStrongBack_E.ANI
+25  YUMI_MoveForward_L.ANI
+26  YUMI_MoveBackward_L.ANI
+27  YUMI_MoveRight_L.ANI
+28  YUMI_MoveLeft_L.ANI
+29  YUMI_Fan_Wait_B.ANI
+2a  YUMI_Fan_Wait_L.ANI
+2b  YUMI_Fan_Wait_E.ANI
+2c  YUMI_Fan_Shoot.ANI
+2d  YUMI_TeleIncant_B.ANI
+2e  YUMI_TeleIncant_L.ANI
+2f  YUMI_Telekinesis_B.ANI
+30  YUMI_Telekinesis_L.ANI
+31  YUMI_Telekinesis_E.ANI
+32  YUMI_TeleMoveForward_L.ANI
+33  YUMI_TeleMoveBackward_L.ANI
+34  YUMI_TeleMoveRight_L.ANI
+35  YUMI_TeleMoveLeft_L.ANI
+36  YUMI_TeleThrowRight.ANI
+37  YUMI_TeleThrowLeft.ANI
+38  YUMI_Funamb_Begin.ANI
+39  YUMI_Funamb_Wait_L.ANI
+3a  YUMI_Funamb_Walk_L.ANI
+3b  YUMI_Funamb_UnbalanceRight.ANI
+3c  YUMI_Funamb_UnbalanceLeft.ANI
+3d  YUMI_Funamb_RecoverRight.ANI
+3e  YUMI_Funamb_RecoverLeft.ANI
+3f  YUMI_Funamb_FallRight.ANI
+40  YUMI_Funamb_FallLeft.ANI
+41  YUMI_Funamb_End.ANI
+42      WEAPON_FAN_Temp.ANI 
+43      WEAPON_FAN_Gard_B.ANI 
+44      WEAPON_FAN_Gard_L.ANI 
+45      WEAPON_FAN_Gard_E.ANI
+46      WEAPON_FAN_GuardPerfect01.ANI
+47      WEAPON_FAN_GuardPerfect02.ANI
+48  WEAPON_FAN_Wait_B.ANI
+49  WEAPON_FAN_Wait_L.ANI
+4a  WEAPON_FAN_Wait_E.ANI
