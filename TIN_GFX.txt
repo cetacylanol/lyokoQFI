@@ -1,0 +1,24 @@
+TIN and GFX
+
+Tin contains file offsets for GFX.
+GFX has textures in it.
+
+tin has a 32B header
+tin start: 8B??- 4B number of 8B entries? - 4B number of 16B entries - 4B number of files in gfx 
+            - 12B padding? - list of 8B entries - list of 16B entries - file offsets
+tin end: 4B some flags?(see flag section) - 4B file size - 
+            4B square side length in px? - 4B offset to file in gfx archive
+
+gfx is just data baybee
+
+Flag section:
+    flags i've seen
+    0000 0001 - CMPR rgb565, no transparency section, pixel block order is in sets of 4  
+    1110 0001 - CMPR rgb565, transparency section, pixel block order is in sets of 4  
+    0110 0101 - rgba32, pixel blocks drawn in rows
+    1100 0001 - ???
+    1010 0001 - ???
+    
+
+
+gfxs are textures stored in CMPR format (see mkwiki). 
