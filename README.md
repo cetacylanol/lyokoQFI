@@ -32,3 +32,9 @@ Or if it's even possible.
 The animation importer (a_test) is like the MWLD importer. Right now it imports the first 4 animations as actions. It needs the rotation mode set to euler.
 Also it gets soo flippy you really need to use the discontinuity filter. Also it doesnt work if the armatures are t-posed so you need to leave them in their
 Human-gourd state. Its weird
+
+# Notes
+Credit me if u use this!
+the blender importer doesnt do custom normals yet </3
+It should all work in blender 4.0
+
