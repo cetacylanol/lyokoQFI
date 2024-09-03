@@ -34,7 +34,7 @@ Also it gets soo flippy you really need to use the discontinuity filter. Also it
 Human-gourd state. Its weird
 
 # Notes
-Credit me if u use this!
-the blender importer doesnt do custom normals yet </3
-It should all work in blender 4.0
+ - Credit me if u use this!
+ - the blender importer doesnt do custom normals yet </3
+ - It should all work in blender 4.0
 
